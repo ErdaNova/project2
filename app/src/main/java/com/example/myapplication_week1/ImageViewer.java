@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 public class ImageViewer extends LinearLayout {
     ImageView image;
+    private String id;
     public ImageViewer(Context context){
         super(context);
         init(context);

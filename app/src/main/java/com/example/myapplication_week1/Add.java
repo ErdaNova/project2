@@ -21,6 +21,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 public class Add extends Activity implements View.OnClickListener {
+    private String id;
 
     protected void onCreate(final Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -79,6 +80,8 @@ public class Add extends Activity implements View.OnClickListener {
                         edit.commit();
 
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        id=getIntent().getExtras().getString("id");
+                        intent.putExtra("id",id);
                         startActivity(intent);
                         finishAffinity();
                     }

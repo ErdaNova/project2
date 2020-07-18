@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int GET_GALLERY_IMAGE=200;
 
 
+
     Button button, tab3_btn, tab3_1, tab3_2, tab3_3, tab3_4, tab3_5, name_btn ;
     Button tab3_1_dst, tab3_2_dst, tab3_3_dst, tab3_4_dst, tab3_5_dst;
     Button result_btn;
@@ -126,13 +127,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int ct=0;
     final int[][] path=new int[7][5];
     private String id;
+    private String id_alter;
+
+
+    int count=0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        String id = intent.getExtras().getString("id");
+        id=getIntent().getExtras().getString("id");
         System.out.println(id);
+        id_alter=id;
+
+
+
         setContentView(R.layout.activity_main);
         TextView t = (TextView)findViewById(R.id.id);
         t.setText(id);
@@ -150,33 +159,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String str=sp.getString("phone",null);
         if(str!=null) jsonParsing(str);
         Collections.sort(list);
-
-        //LISTVIEW
-//        final ListView listview = (ListView)findViewById(R.id.pb_listview);
-//
-//        adapter = new PbAdapter(this,R.layout.pb_item, list);
-//        adapter.notifyDataSetChanged();
-//        listView.setAdapter(adapter);
-
-//        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView adapterView, View view, int position, long id) {
-//                Intent intent=new Intent(getApplicationContext(), Next.class);
-//
-//                intent.putExtra("name", list.get(position).getName());
-//                intent.putExtra("number", list.get(position).getNumber());
-//                list.get(position).setFriendly(list.get(position).getFriendly()+1);
-//                intent.putExtra("friendly", list.get(position).getFriendly());
-//                total++;
-//                intent.putExtra("total",total);
-//                intent.putExtra("index", position);
-//                startActivity(intent);
-//            }
-//        });
-
-        //SWIPE
-
-
 
 
 
@@ -232,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 list.addAll(tmp1);
                 Intent intent=new Intent(getApplicationContext(), Next.class);
 
+                intent.putExtra("id", id_alter);
                 intent.putExtra("name", list.get(position).getName());
                 intent.putExtra("number", list.get(position).getNumber());
                 list.get(position).setFriendly(list.get(position).getFriendly()+1);
@@ -239,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 total++;
                 intent.putExtra("total",total);
                 intent.putExtra("index", position);
+
                 startActivity(intent);
             }
         });
@@ -261,7 +245,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case 0:
                         Intent intent=new Intent(getApplicationContext(), Modify.class);
                         intent.putExtra("index", position);
+                        intent.putExtra("id", id);
                         startActivity(intent);
+
                         break;
                     case 1:
                         AlertDialog.Builder del=new AlertDialog.Builder(MainActivity.this);
@@ -344,6 +330,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 list.clear();
                 list.addAll(tmp1);
                 Intent intent=new Intent(getApplicationContext(), Add.class);
+                intent.putExtra("id", id);
                 startActivity(intent);
             }
         });
@@ -371,6 +358,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View view) {
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image/*");
+                intent.putExtra("id", id);
                 startActivityForResult(intent, GET_GALLERY_IMAGE);
             }
         });
@@ -483,6 +471,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 editor.putInt("third",thirdImg[0]);
                 editor.commit();
                 intent.putExtra("image", Integer.toString((imageAdapter.getItem(i).getImage())));
+                intent.putExtra("id", id);
                 startActivity(intent);
 
             }
@@ -505,6 +494,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 second.setImageResource(0);
                 third.setImageResource(0);
                 Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+                intent.putExtra("id", id);
                 startActivity(intent);
                 finish();
             }
@@ -515,6 +505,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
                 Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
                 intent.putExtra("image",Integer.toString(k));
+                intent.putExtra("id", id);
                 startActivity(intent);
             }
         });
@@ -524,6 +515,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
                 Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
                 intent.putExtra("image",Integer.toString(k));
+                intent.putExtra("id", id);
                 startActivity(intent);
             }
         });
@@ -534,6 +526,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
                 Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
                 intent.putExtra("image",Integer.toString(k));
+                intent.putExtra("id", id);
                 startActivity(intent);
             }
         });
@@ -570,6 +563,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             */
 
             intent.putExtra("image", selectedImageUri.toString());
+            intent.putExtra("id", id);
             startActivity(intent);
 
         }

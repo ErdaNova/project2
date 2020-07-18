@@ -12,6 +12,7 @@ public class Phonebook implements Serializable, Comparable<Phonebook> {
     private String number;
     private int friendly;
     static ArrayList<Phonebook> pblist=new ArrayList<Phonebook>();
+    private String id;
 
     public Phonebook(){}
     public Phonebook(String name,String number, int friendly){

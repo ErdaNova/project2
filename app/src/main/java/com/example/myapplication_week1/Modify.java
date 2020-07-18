@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Modify extends Activity implements View.OnClickListener{
+    private String id;
 
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -74,8 +75,10 @@ public class Modify extends Activity implements View.OnClickListener{
                         edit.commit();
 
                         Toast.makeText(getBaseContext(), "수정되었습니다.", Toast.LENGTH_SHORT).show();
-
+                        id=getIntent().getExtras().getString("id");
                         Intent intent=new Intent(getApplicationContext(), MainActivity.class);
+
+                        intent.putExtra("id",id);
                         startActivity(intent);
                         finishAffinity();
                     }

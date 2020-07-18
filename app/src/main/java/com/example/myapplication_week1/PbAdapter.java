@@ -15,6 +15,7 @@ public class PbAdapter extends BaseAdapter {
     private LayoutInflater inflater;
     private ArrayList<Phonebook> pbarray;
     private int layout;
+    private String id;
 
     public PbAdapter(Context context, int layout, ArrayList<Phonebook> pbarray){
         this.inflater=(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);

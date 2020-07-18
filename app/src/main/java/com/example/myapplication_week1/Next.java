@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 
 public class Next extends Activity {
+   public String id;
 
     @SuppressLint("StringFormatInvalid")
     protected void onCreate(Bundle savedInstanceState){
@@ -34,6 +35,8 @@ public class Next extends Activity {
         TextView name=(TextView)findViewById(R.id.tv_name);
         TextView number=(TextView)findViewById(R.id.tv_number);
         TextView friendly=(TextView)findViewById(R.id.tv_per);
+        id=getIntent().getExtras().getString("id");
+        System.out.println(id);
 
         int total=intent.getIntExtra("total",0);
         name.setText(intent.getStringExtra("name"));
@@ -70,6 +73,8 @@ public class Next extends Activity {
 //                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 //                MainActivity.list.clear();
 //                MainActivity.list.addAll(MainActivity.tmp);
+
+                intent.putExtra("id",id);
                 startActivity(intent);
                 overridePendingTransition(R.anim.fadein,R.anim.fade_out);
                 finishAffinity();
