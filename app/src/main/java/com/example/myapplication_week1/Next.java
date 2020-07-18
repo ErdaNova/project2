@@ -69,26 +69,17 @@ public class Next extends Activity {
         check.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent=new Intent(getApplicationContext(), MainActivity.class);
-//                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-//                MainActivity.list.clear();
-//                MainActivity.list.addAll(MainActivity.tmp);
 
-                intent.putExtra("id",id);
-                startActivity(intent);
-                overridePendingTransition(R.anim.fadein,R.anim.fade_out);
-                finishAffinity();
+
+                finish();
+
+
+
             }
         });
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event){
-        if(event.getAction()==MotionEvent.ACTION_OUTSIDE){
-            return false;
-        }
-        return true;
-    }
+
 
     @Override
     public void onBackPressed(){

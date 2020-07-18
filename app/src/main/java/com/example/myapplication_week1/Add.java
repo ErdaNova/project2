@@ -83,7 +83,7 @@ public class Add extends Activity implements View.OnClickListener {
                         id=getIntent().getExtras().getString("id");
                         intent.putExtra("id",id);
                         startActivity(intent);
-                        finishAffinity();
+                        finish();
                     }
                 }
             }

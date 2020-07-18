@@ -75,12 +75,8 @@ public class Modify extends Activity implements View.OnClickListener{
                         edit.commit();
 
                         Toast.makeText(getBaseContext(), "수정되었습니다.", Toast.LENGTH_SHORT).show();
-                        id=getIntent().getExtras().getString("id");
-                        Intent intent=new Intent(getApplicationContext(), MainActivity.class);
 
-                        intent.putExtra("id",id);
-                        startActivity(intent);
-                        finishAffinity();
+                        finish();
                     }
                 });
                 ch.setPositiveButton("아니오 뚱인데요", new DialogInterface.OnClickListener() {

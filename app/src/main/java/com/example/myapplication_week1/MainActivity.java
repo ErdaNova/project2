@@ -213,8 +213,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 list.clear();
                 list.addAll(tmp1);
                 Intent intent=new Intent(getApplicationContext(), Next.class);
-
-                intent.putExtra("id", id_alter);
+                
                 intent.putExtra("name", list.get(position).getName());
                 intent.putExtra("number", list.get(position).getNumber());
                 list.get(position).setFriendly(list.get(position).getFriendly()+1);
@@ -245,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case 0:
                         Intent intent=new Intent(getApplicationContext(), Modify.class);
                         intent.putExtra("index", position);
-                        intent.putExtra("id", id);
+
                         startActivity(intent);
 
                         break;
@@ -358,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View view) {
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image/*");
-                intent.putExtra("id", id);
+
                 startActivityForResult(intent, GET_GALLERY_IMAGE);
             }
         });
@@ -471,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 editor.putInt("third",thirdImg[0]);
                 editor.commit();
                 intent.putExtra("image", Integer.toString((imageAdapter.getItem(i).getImage())));
-                intent.putExtra("id", id);
+
                 startActivity(intent);
 
             }
@@ -505,7 +504,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
                 Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
                 intent.putExtra("image",Integer.toString(k));
-                intent.putExtra("id", id);
+
                 startActivity(intent);
             }
         });
@@ -515,7 +514,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
                 Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
                 intent.putExtra("image",Integer.toString(k));
-                intent.putExtra("id", id);
+
                 startActivity(intent);
             }
         });
@@ -526,7 +525,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
                 Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
                 intent.putExtra("image",Integer.toString(k));
-                intent.putExtra("id", id);
+
                 startActivity(intent);
             }
         });
