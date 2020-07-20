@@ -87,7 +87,7 @@
             android:layout_weight="2"
             android:id="@+id/check"
             android:gravity="center"
-            android:text="ㅇㅋ"
+            android:text="확인"
             android:textColor="@color/white"
             android:background="@color/bright_red"
             android:textSize="20dp"
