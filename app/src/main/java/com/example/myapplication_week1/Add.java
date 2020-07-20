@@ -25,6 +25,8 @@ public class Add extends Activity implements View.OnClickListener {
     protected void onCreate(final Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_click);
+        Intent intent = getIntent();
+        final String id = intent.getStringExtra("id");
 
         Button okaybt=(Button)findViewById(R.id.okay1);
         okaybt.setOnClickListener(new View.OnClickListener(){
@@ -73,12 +75,17 @@ public class Add extends Activity implements View.OnClickListener {
                             e.printStackTrace();
                         }
 
+                        /*
                         String str = obj.toString();
                         SharedPreferences.Editor edit = getSharedPreferences("contact", MODE_PRIVATE).edit();
                         edit.putString("phone", str);
-                        edit.commit();
+                        edit.commit();*/
+                        MainActivity mainAct = new MainActivity();
+                        MainActivity.HttpAsyncTask httpTask = new MainActivity.HttpAsyncTask(mainAct);
+                        httpTask.execute("http://192.249.19.243:9780/api/gallery", uname, unum, "0");
 
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("id",id);
                         startActivity(intent);
                         finishAffinity();
                     }

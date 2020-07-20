@@ -36,9 +36,10 @@ public class Next extends Activity {
         TextView friendly=(TextView)findViewById(R.id.tv_per);
 
         int total=intent.getIntExtra("total",0);
+        String id = intent.getStringExtra("id");
         name.setText(intent.getStringExtra("name"));
         number.setText(intent.getStringExtra("number"));
-        friendly.setText(Integer.toString(intent.getIntExtra("friendly",0)*100/total)+"%");
+        friendly.setText(Integer.toString(Integer.parseInt(intent.getStringExtra("friendly"))*100/total)+"%");
 
         //final int idx=intent.getIntExtra("index",0);
 
@@ -62,6 +63,7 @@ public class Next extends Activity {
         edit.putString("phone",str);
         edit.commit();
 
+
         TextView check=(TextView)findViewById(R.id.check);
         check.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,9 +72,10 @@ public class Next extends Activity {
 //                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 //                MainActivity.list.clear();
 //                MainActivity.list.addAll(MainActivity.tmp);
-                startActivity(intent);
-                overridePendingTransition(R.anim.fadein,R.anim.fade_out);
-                finishAffinity();
+//                startActivity(intent);
+//                overridePendingTransition(R.anim.fadein,R.anim.fade_out);
+//                finishAffinity();
+                finish();
             }
         });
     }

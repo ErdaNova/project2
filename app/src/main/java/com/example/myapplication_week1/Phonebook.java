@@ -10,11 +10,11 @@ import java.util.ArrayList;
 public class Phonebook implements Serializable, Comparable<Phonebook> {
     private String name;
     private String number;
-    private int friendly;
+    private String friendly;
     static ArrayList<Phonebook> pblist=new ArrayList<Phonebook>();
 
     public Phonebook(){}
-    public Phonebook(String name,String number, int friendly){
+    public Phonebook(String name,String number, String friendly){
         this.name=name;
         this.number=number;
         this.friendly=friendly;
@@ -24,20 +24,20 @@ public class Phonebook implements Serializable, Comparable<Phonebook> {
     public void setNumber(String number){
         this.number=number;
     }
-    public void setFriendly(int friendly) { this.friendly=friendly; }
+    public void setFriendly(String friendly) { this.friendly=friendly; }
     public String getName(){
         return name;
     }
     public String getNumber(){
         return number;
     }
-    public int getFriendly() { return friendly; }
+    public String getFriendly() { return friendly; }
     public ArrayList<Phonebook> getList(){ return pblist; }
 
     @Override
     public int compareTo(Phonebook phonebook) {
-        if(this.getFriendly()>phonebook.getFriendly()) return -1;
-        else if(this.getFriendly()<phonebook.getFriendly()) return 1;
+        if(Integer.parseInt(this.getFriendly())>Integer.parseInt(phonebook.getFriendly())) return -1;
+        else if(Integer.parseInt(this.getFriendly())<Integer.parseInt(phonebook.getFriendly())) return 1;
         return 0;
     }
 }

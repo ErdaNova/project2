@@ -28,7 +28,10 @@ public class Modify extends Activity implements View.OnClickListener{
 
         Intent intent=getIntent();
         final int idx=intent.getIntExtra("index",0);
+        final String id = intent.getStringExtra("id");
 
+        final String oldnum = MainActivity.list.get(idx).getNumber();
+        final String friendy = MainActivity.list.get(idx).getFriendly();
         prename.setText(MainActivity.list.get(idx).getName());
         prenumber.setText(MainActivity.list.get(idx).getNumber());
         System.out.println(MainActivity.list.get(idx).getName());
@@ -42,6 +45,7 @@ public class Modify extends Activity implements View.OnClickListener{
 
                 final String uname=editname.getText().toString();
                 final String unum=editnum.getText().toString();
+
 
                 AlertDialog.Builder ch=new AlertDialog.Builder(Modify.this);
                 ch.setTitle("MODIFY");
@@ -67,15 +71,20 @@ public class Modify extends Activity implements View.OnClickListener{
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-
+/*
                         String str=obj.toString();
                         SharedPreferences.Editor edit=getSharedPreferences("contact",MODE_PRIVATE).edit();
                         edit.putString("phone",str);
                         edit.commit();
+*/
+                        MainActivity mainAct = new MainActivity();
+                        MainActivity.HttpUpdateAsyncTask httpTask = new MainActivity.HttpUpdateAsyncTask(mainAct);
+                        httpTask.execute("http://192.249.19.243:9780/api/phonebooks/specialkey/"+id+oldnum,  uname, unum, friendy);
 
                         Toast.makeText(getBaseContext(), "수정되었습니다.", Toast.LENGTH_SHORT).show();
 
                         Intent intent=new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("id",id);
                         startActivity(intent);
                         finishAffinity();
                     }

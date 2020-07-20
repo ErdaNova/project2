@@ -15,10 +15,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 //import android.provider.ContactsContract;
 import android.os.Vibrator;
@@ -42,6 +45,12 @@ import android.widget.Button;
 import android.view.ViewGroup;
 
 //import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.util.*;
 //import java.util.List;
@@ -94,17 +103,11 @@ import java.util.logging.LogRecord;
 
 
 
-
-
-
-
-
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     //ImageView image1, image2,image3,image4, image5, image6, image7, image8, image9, image10, image11, image12, image13, image14, image15, image16, image17, image18, image19, image20, image21;
-    GridView gridView;
-    ImageAdapter imageAdapter;
+    static GridView gridView;
+    static ImageAdapter imageAdapter;
     private final int GET_GALLERY_IMAGE=200;
 
 
@@ -120,18 +123,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<Phonebook> tmp1=new ArrayList<Phonebook>();
     static ArrayList<String> tmp2=new ArrayList<String>();
     int total=0;
-
+    static SwipeMenuListView listView;
     //Handler mdHandler, mlHandler, mrHandler;
     Handler mHandler;
     int ct=0;
     final int[][] path=new int[7][5];
-    private String id;
+    private static String id;
+
+    private String host = "http://192.249.19.243:9780";
+    static String str = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
-        String id = intent.getExtras().getString("id");
+        id = intent.getExtras().getString("id");
         System.out.println(id);
         setContentView(R.layout.activity_main);
         TextView t = (TextView)findViewById(R.id.id);
@@ -146,10 +153,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         spec.setContent(R.id.tab_content1);
         host.addTab(spec);
 
-        SharedPreferences sp=getSharedPreferences("contact",MODE_PRIVATE);
-        String str=sp.getString("phone",null);
-        if(str!=null) jsonParsing(str);
-        Collections.sort(list);
+        HttpGetAsyncTask httpTask = new HttpGetAsyncTask(MainActivity.this);
+        httpTask.execute("http://192.249.19.243:9780/api/phonebooks/idnum/"+id);
+
+//        if(str!=null) jsonParsing(str);
+//        Collections.sort(list);
 
         //LISTVIEW
 //        final ListView listview = (ListView)findViewById(R.id.pb_listview);
@@ -175,8 +183,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        });
 
         //SWIPE
-
-
 
 
 
@@ -218,8 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-
-        final SwipeMenuListView listView=findViewById(R.id.pb_listview);
+        listView=findViewById(R.id.pb_listview);
         adapter = new PbAdapter(this,R.layout.pb_item, list);
         adapter.notifyDataSetChanged();
         listView.setAdapter(adapter);
@@ -228,17 +233,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView adapterView, View view, int position, long id) {
+                System.out.println(list);
                 list.clear();
                 list.addAll(tmp1);
                 Intent intent=new Intent(getApplicationContext(), Next.class);
-
+                Log.d("indexNumber",Integer.toString(position));
+                System.out.println(list);
                 intent.putExtra("name", list.get(position).getName());
                 intent.putExtra("number", list.get(position).getNumber());
-                list.get(position).setFriendly(list.get(position).getFriendly()+1);
+                list.get(position).setFriendly(Integer.toString(Integer.parseInt(list.get(position).getFriendly())+1));
                 intent.putExtra("friendly", list.get(position).getFriendly());
                 total++;
+                HttpUpdateAsyncTask httpTask = new HttpUpdateAsyncTask(MainActivity.this);
+                httpTask.execute("http://192.249.19.243:9780/api/phonebooks/specialkey/"+MainActivity.id+list.get(position).getNumber(),  list.get(position).getName(), list.get(position).getNumber(), list.get(position).getFriendly());
                 intent.putExtra("total",total);
                 intent.putExtra("index", position);
+                intent.putExtra("id",MainActivity.id);
                 startActivity(intent);
             }
         });
@@ -261,6 +271,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case 0:
                         Intent intent=new Intent(getApplicationContext(), Modify.class);
                         intent.putExtra("index", position);
+                        intent.putExtra("id",id);
                         startActivity(intent);
                         break;
                     case 1:
@@ -271,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         del.setNegativeButton("예", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+                                String delNum = list.get(position).getNumber();
                                 list.remove(position);
                                 tmp1.clear();
                                 tmp1.addAll(list);
@@ -291,10 +303,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 }
 
                                 String str = obj.toString();
+                                HttpDelAsyncTask httpTask = new HttpDelAsyncTask(MainActivity.this);
+                                httpTask.execute("http://192.249.19.243:9780/api/phonebooks/specialkey/"+id+delNum);
+                                /*
                                 SharedPreferences.Editor edit = getSharedPreferences("contact", MODE_PRIVATE).edit();
                                 edit.putString("phone", str);
                                 edit.commit();
-
+                                 */
                                 Toast.makeText(getBaseContext(), "삭제되었습니다.", Toast.LENGTH_SHORT).show();
 
                                 adapter.notifyDataSetChanged();
@@ -344,6 +359,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 list.clear();
                 list.addAll(tmp1);
                 Intent intent=new Intent(getApplicationContext(), Add.class);
+                intent.putExtra("id", id);
                 startActivity(intent);
             }
         });
@@ -359,10 +375,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final int[] mostviewImg = {0};
         final int[] secondImg = {0};
         final int[] thirdImg = {0};
-        final ImageView mostViewd = (ImageView)findViewById(R.id.mostView);
-        final ImageView second = (ImageView)findViewById(R.id.second);
-        final ImageView third = (ImageView)findViewById(R.id.third);
-        final SharedPreferences sp2 = getSharedPreferences("gallery",MODE_PRIVATE);
+//        final ImageView mostViewd = (ImageView)findViewById(R.id.mostView);
+//        final ImageView second = (ImageView)findViewById(R.id.second);
+//        final ImageView third = (ImageView)findViewById(R.id.third);
+//        final SharedPreferences sp2 = getSharedPreferences("gallery",MODE_PRIVATE);
 
 
         button = (Button)findViewById(R.id.button);
@@ -376,167 +392,101 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 
-        gridView = (GridView)findViewById(R.id.gridView);
 
-        imageAdapter = new ImageAdapter();
-        imageAdapter.addItem(new ImageItem(R.drawable.image1));
-        imageAdapter.addItem(new ImageItem(R.drawable.image2));
-        imageAdapter.addItem(new ImageItem(R.drawable.image3));
-        imageAdapter.addItem(new ImageItem(R.drawable.image4));
-        imageAdapter.addItem(new ImageItem(R.drawable.image5));
-        imageAdapter.addItem(new ImageItem(R.drawable.image6));
-        imageAdapter.addItem(new ImageItem(R.drawable.image7));
-        imageAdapter.addItem(new ImageItem(R.drawable.image8));
-        imageAdapter.addItem(new ImageItem(R.drawable.image9));
-        imageAdapter.addItem(new ImageItem(R.drawable.image10));
-        imageAdapter.addItem(new ImageItem(R.drawable.image11));
-        imageAdapter.addItem(new ImageItem(R.drawable.image12));
-        imageAdapter.addItem(new ImageItem(R.drawable.image13));
-        imageAdapter.addItem(new ImageItem(R.drawable.image14));
-        imageAdapter.addItem(new ImageItem(R.drawable.image15));
-        imageAdapter.addItem(new ImageItem(R.drawable.image16));
-        imageAdapter.addItem(new ImageItem(R.drawable.image17));
-        imageAdapter.addItem(new ImageItem(R.drawable.image18));
-        imageAdapter.addItem(new ImageItem(R.drawable.image19));
-        imageAdapter.addItem(new ImageItem(R.drawable.image20));
-        imageAdapter.addItem(new ImageItem(R.drawable.image21));
-        gridView.setAdapter(imageAdapter);
-        gridView.setAdapter(imageAdapter);
+//        imageAdapter.addItem(new ImageItem(R.drawable.image1));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image2));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image3));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image4));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image5));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image6));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image7));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image8));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image9));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image10));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image11));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image12));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image13));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image14));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image15));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image16));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image17));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image18));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image19));
+//        imageAdapter.addItem(new ImageItem(R.drawable.image20));
+    //        imageAdapter.addItem(new ImageItem(R.drawable.image21));
+    //        gridView.setAdapter(imageAdapter);
+//        gridView.setAdapter(imageAdapter);
+        HttpGetAsyncTask2 httpTask2 = new HttpGetAsyncTask2(MainActivity.this);
+        httpTask2.execute("http://192.249.19.243:9780/api/phonebooks/idnum/"+id);
 
-
-        mostviewImg[0]=sp2.getInt("most",0);
-        secondImg[0]=sp2.getInt("second",0);
-        thirdImg[0]=sp2.getInt("third",0);
-        if(mostviewImg[0]!=0) {
-            int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
-            mostViewd.setImageResource(k);
-        }
-        if(secondImg[0]!=0) {
-            int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
-            second.setImageResource(k);
-        }
-        if(thirdImg[0]!=0) {
-            int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
-            third.setImageResource(k);
-        }
-        final SharedPreferences.Editor editor = sp2.edit();
-
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-
-                int num = sp2.getInt(Integer.toString(i),0);
-                num+=1;
-                editor.putInt(Integer.toString(i),num);
-                editor.commit();
-                for(int a=0; a<21; a++) {
-                    viewnum[a] = sp2.getInt(Integer.toString(a),0);
-                    if(mostviewNum[0] < viewnum[a]){
-                        mostviewNum[0] = viewnum[a];
-                        int temp = mostviewImg[0];
-                        int temp2 = secondImg[0];
-                        mostviewImg[0] = a+1;
-                        if(temp==mostviewImg[0]){
-                            continue;
-                        }
-                        if(temp2==mostviewImg[0]){
-                            secondImg[0]=temp;
-                            continue;
-                        }
-
-                        secondImg[0]=temp;
-                        thirdImg[0]=temp2;
-
-                    }
-                    else if((a+1)!=mostviewImg[0]&&viewnum[a]>secondNum[0]){
-                        secondNum[0]=viewnum[a];
-                        int temp = secondImg[0];
-                        secondImg[0]=a+1;
-                        if(temp == secondImg[0]){
-                            continue;
-                        }
-
-                        thirdImg[0]=temp;
-
-                    }
-                    else if((a+1)!=mostviewImg[0]&&(a+1)!=secondImg[0]&&viewnum[a]>thirdNum[0]){
-                        thirdNum[0]=viewnum[a];
-                        thirdImg[0]=a+1;
-
-                    }
-                }
-                if(mostviewImg[0]!=0) {
-                    int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
-                    mostViewd.setImageResource(k);
-                }
-                if(secondImg[0]!=0) {
-                    int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
-                    second.setImageResource(k);
-                }
-                if(thirdImg[0]!=0) {
-                    int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
-                    third.setImageResource(k);
-                }
-                editor.putInt("most",mostviewImg[0]);
-                editor.putInt("second",secondImg[0]);
-                editor.putInt("third",thirdImg[0]);
-                editor.commit();
-                intent.putExtra("image", Integer.toString((imageAdapter.getItem(i).getImage())));
-                startActivity(intent);
-
-            }
-        });
-        Button reset = (Button)findViewById(R.id.reset);
-        reset.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                for(int a=0; a<21; a++){
-                    editor.putInt(Integer.toString(a),0);
-                }
-                mostviewImg[0] = 0;
-                secondImg[0] = 0;
-                thirdImg[0] = 0;
-                editor.putInt("most",mostviewImg[0]);
-                editor.putInt("second",secondImg[0]);
-                editor.putInt("third",thirdImg[0]);
-                editor.commit();
-                mostViewd.setImageResource(0);
-                second.setImageResource(0);
-                third.setImageResource(0);
-                Intent intent = new Intent(getApplicationContext(),MainActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
-        mostViewd.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
-                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-                intent.putExtra("image",Integer.toString(k));
-                startActivity(intent);
-            }
-        });
-        second.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
-                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-                intent.putExtra("image",Integer.toString(k));
-                startActivity(intent);
-            }
-        });
-
-        third.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
-                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-                intent.putExtra("image",Integer.toString(k));
-                startActivity(intent);
-            }
-        });
+//        mostviewImg[0]=sp2.getInt("most",0);
+//        secondImg[0]=sp2.getInt("second",0);
+//        thirdImg[0]=sp2.getInt("third",0);
+//        if(mostviewImg[0]!=0) {
+//            int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
+//            mostViewd.setImageResource(k);
+//        }
+//        if(secondImg[0]!=0) {
+//            int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
+//            second.setImageResource(k);
+//        }
+//        if(thirdImg[0]!=0) {
+//            int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
+//            third.setImageResource(k);
+//        }
+//        final SharedPreferences.Editor editor = sp2.edit();
+//
+//
+//        Button reset = (Button)findViewById(R.id.reset);
+//        reset.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view) {
+//                for(int a=0; a<21; a++){
+//                    editor.putInt(Integer.toString(a),0);
+//                }
+//                mostviewImg[0] = 0;
+//                secondImg[0] = 0;
+//                thirdImg[0] = 0;
+//                editor.putInt("most",mostviewImg[0]);
+//                editor.putInt("second",secondImg[0]);
+//                editor.putInt("third",thirdImg[0]);
+//                editor.commit();
+//                mostViewd.setImageResource(0);
+//                second.setImageResource(0);
+//                third.setImageResource(0);
+//                Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+//                startActivity(intent);
+//                finish();
+//            }
+//        });
+//        mostViewd.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view){
+//                int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
+//                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
+//                intent.putExtra("image",Integer.toString(k));
+//                startActivity(intent);
+//            }
+//        });
+//        second.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view){
+//                int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
+//                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
+//                intent.putExtra("image",Integer.toString(k));
+//                startActivity(intent);
+//            }
+//        });
+//
+//        third.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View view){
+//                int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
+//                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
+//                intent.putExtra("image",Integer.toString(k));
+//                startActivity(intent);
+//            }
+//        });
 
         spec = host.newTabSpec("tab3");
         spec.setIndicator("LADDER");
@@ -547,8 +497,457 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    public static String GET(String url) {
+        InputStream is = null;
+        String result = "";
+        try {
+            URL urlCon = new URL(url);
+            HttpURLConnection httpCon = (HttpURLConnection)urlCon.openConnection();
+
+            String json = "";
+
+            // build jsonObject
+//            JSONObject jsonObject = new JSONObject();
+//            jsonObject.accumulate("name", phonenum.getName());
+//            jsonObject.accumulate("num", phonenum.getNum());
+//            jsonObject.accumulate("mail", phonenum.getMail());
+
+            // convert JSONObject to JSON to String
+//            json = jsonObject.toString();
+
+            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
+            // ObjectMapper mapper = new ObjectMapper();
+            // json = mapper.writeValueAsString(person);
+
+            // Set some headers to inform server about the type of the content
+            httpCon.setRequestProperty("Accept", "application/json");
+            httpCon.setRequestProperty("Content-type", "application/json");
+
+            httpCon.setRequestMethod("GET");
+            // InputStream으로 서버로 부터 응답을 받겠다는 옵션.
+            httpCon.setDoInput(true);
+
+            // receive response as inputStream
+            try {
+                is = httpCon.getInputStream();
+                // convert inputstream to string
+                if(is != null)
+                    result = convertInputStreamToString(is);
+                else
+                    result = "Did not work!";
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                httpCon.disconnect();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+
+        return result;
+    }
 
 
+    public static String DEL(String url) {
+        InputStream is = null;
+        String result = "";
+        try {
+            URL urlCon = new URL(url);
+            HttpURLConnection httpCon = (HttpURLConnection)urlCon.openConnection();
+
+            String json = "";
+
+            // build jsonObject
+//            JSONObject jsonObject = new JSONObject();
+//            jsonObject.accumulate("name", phonenum.getName());
+//            jsonObject.accumulate("num", phonenum.getNum());
+//            jsonObject.accumulate("mail", phonenum.getMail());
+
+            // convert JSONObject to JSON to String
+//            json = jsonObject.toString();
+
+            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
+            // ObjectMapper mapper = new ObjectMapper();
+            // json = mapper.writeValueAsString(person);
+
+            // Set some headers to inform server about the type of the content
+            httpCon.setRequestProperty("Accept", "application/json");
+            httpCon.setRequestProperty("Content-type", "application/json");
+
+            httpCon.setRequestMethod("DELETE");
+
+            httpCon.setDoOutput(true);
+            // InputStream으로 서버로 부터 응답을 받겠다는 옵션.
+            httpCon.setDoInput(true);
+
+            // receive response as inputStream
+            try {
+                is = httpCon.getInputStream();
+                // convert inputstream to string
+                if(is != null)
+                    result = convertInputStreamToString(is);
+                else
+                    result = "Did not work!";
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                httpCon.disconnect();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+
+        return result;
+    }
+
+    public static String UPDATE(String url, Phonebook phonenum){
+        InputStream is = null;
+        String result = "";
+        try {
+            URL urlCon = new URL(url);
+            HttpURLConnection httpCon = (HttpURLConnection)urlCon.openConnection();
+
+            String json = "";
+
+            // build jsonObject
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.accumulate("idnum", id);
+            jsonObject.accumulate("name", phonenum.getName());
+            jsonObject.accumulate("num", phonenum.getNumber());
+            jsonObject.accumulate("friendy", phonenum.getFriendly());
+            jsonObject.accumulate("specialkey",id+phonenum.getNumber());
+
+            // convert JSONObject to JSON to String
+            json = jsonObject.toString();
+
+            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
+            // ObjectMapper mapper = new ObjectMapper();
+            // json = mapper.writeValueAsString(person);
+
+            // Set some headers to inform server about the type of the content
+            httpCon.setRequestProperty("Accept", "application/json");
+            httpCon.setRequestProperty("Content-type", "application/json");
+
+            // OutputStream으로 POST 데이터를 넘겨주겠다는 옵션.
+            httpCon.setDoOutput(true);
+            // InputStream으로 서버로 부터 응답을 받겠다는 옵션.
+            httpCon.setDoInput(true);
+            httpCon.setRequestMethod("PUT");
+
+            OutputStream os = httpCon.getOutputStream();
+            os.write(json.getBytes("utf-8"));
+            os.flush();
+            // receive response as inputStream
+            try {
+                is = httpCon.getInputStream();
+                // convert inputstream to string
+                if(is != null)
+                    result = convertInputStreamToString(is);
+                else
+                    result = "Did not work!";
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                httpCon.disconnect();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+
+        return result;
+    }
+
+    public static String POST(String url, Phonebook phonenum){
+        InputStream is = null;
+        String result = "";
+        try {
+            URL urlCon = new URL(url);
+            HttpURLConnection httpCon = (HttpURLConnection)urlCon.openConnection();
+
+            String json = "";
+
+            // build jsonObject
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.accumulate("idnum", id);
+            jsonObject.accumulate("name", phonenum.getName());
+            jsonObject.accumulate("num", phonenum.getNumber());
+            jsonObject.accumulate("friendy", phonenum.getFriendly());
+
+            jsonObject.accumulate("specialkey", id + phonenum.getNumber());
+
+            // convert JSONObject to JSON to String
+            json = jsonObject.toString();
+            System.out.println(json);
+
+            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
+            // ObjectMapper mapper = new ObjectMapper();
+            // json = mapper.writeValueAsString(person);
+
+            // Set some headers to inform server about the type of the content
+            httpCon.setRequestProperty("Accept", "application/json");
+            httpCon.setRequestProperty("Content-type", "application/json");
+
+            // OutputStream으로 POST 데이터를 넘겨주겠다는 옵션.
+            httpCon.setDoOutput(true);
+            // InputStream으로 서버로 부터 응답을 받겠다는 옵션.
+            httpCon.setDoInput(true);
+
+            OutputStream os = httpCon.getOutputStream();
+            os.write(json.getBytes("utf-8"));
+            os.flush();
+            // receive response as inputStream
+            try {
+                is = httpCon.getInputStream();
+                // convert inputstream to string
+                if(is != null)
+                    result = convertInputStreamToString(is);
+                else
+                    result = "Did not work!";
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                httpCon.disconnect();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+
+        return result;
+    }
+
+    private class HttpGetAsyncTask extends AsyncTask<String, Void, String> {
+
+        private MainActivity mainAct;
+        HttpGetAsyncTask(MainActivity mainActivity) {this.mainAct = mainActivity;}
+        @Override
+        protected String doInBackground(String... urls) {
+
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            str = result;
+            mainAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //mainAct.tvResponse.setText(strJson);
+                    if(str!=null) jsonParsing(str);
+                    Collections.sort(list);
+                    SwipeMenuCreator creator=new SwipeMenuCreator() {
+                        @Override
+                        public void create(SwipeMenu menu) {
+
+                            SwipeMenuItem item=new SwipeMenuItem(getApplicationContext());
+                            item.setBackground(new ColorDrawable(Color.rgb(0xFF,0x71,0x71)));
+                            item.setWidth(200);
+                            // set item title
+                            item.setTitle("MODIFY");
+                            // set item title fontsize
+                            item.setTitleSize(15);
+                            // set item title font color
+                            item.setTitleColor(Color.WHITE);
+                            // add to menu
+                            menu.addMenuItem(item);
+
+                            // create "delete" item
+                            SwipeMenuItem deleteItem = new SwipeMenuItem(
+                                    getApplicationContext());
+                            // set item background
+                            deleteItem.setBackground(new ColorDrawable(Color.rgb(0xFF,
+                                    0xFF, 0xFF)));
+                            // set item width
+                            deleteItem.setWidth(200);
+                            // set item title
+                            deleteItem.setTitle("DELETE");
+                            // set item title fontsize
+                            deleteItem.setTitleSize(15);
+                            // set item title font color
+                            deleteItem.setTitleColor(Color.rgb(0xFF,0x71,0x71));
+                            // add to menu
+                            menu.addMenuItem(deleteItem);
+                        }
+                    };
+
+                    listView=findViewById(R.id.pb_listview);
+                    adapter = new PbAdapter(mainAct,R.layout.pb_item, list);
+                    adapter.notifyDataSetChanged();
+                    MainActivity.listView.setAdapter(adapter);
+                    MainActivity.listView.setMenuCreator(creator);
+                    tmp1.addAll(list);
+                }
+            });
+
+        }
+    }
+
+    class HttpGetAsyncTask2 extends AsyncTask<String, Void, String> {
+
+        private MainActivity mainAct;
+        HttpGetAsyncTask2(MainActivity mainActivity) {this.mainAct = mainActivity;}
+        @Override
+        protected String doInBackground(String... urls) {
+
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            str = result;
+            mainAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //mainAct.tvResponse.setText(strJson);
+                    try{
+//            JSONObject jobj=new JSONObject(json);
+//            JSONArray jarray=jobj.getJSONArray("Phonebook");
+                        JSONArray jarray = new JSONArray(str);
+                        System.out.println(str);
+                        gridView = (GridView)findViewById(R.id.gridView);
+                        imageAdapter = new ImageAdapter();
+                        int imgnum=0;
+                        for(int i=0; i<jarray.length(); i++) {
+                            JSONObject pobj = jarray.getJSONObject(i);
+                            if(Integer.parseInt(pobj.getString("friendy"))==-1) {
+                                Bitmap newimg = StringToBitMap(pobj.getString("num"));
+                                //Bitmap resized = Bitmap.createScaledBitmap(newimg, 300, 300, true);
+                                MainActivity.HttpUpdateAsyncTask httpTask2 = new MainActivity.HttpUpdateAsyncTask(mainAct);
+                                httpTask2.execute("http://192.249.19.243:9780/api/phonebooks/name/"+pobj.getString("name"), "image"+Integer.toString((imgnum))+MainActivity.id, BitMapToString(newimg), "-1");
+                                imgnum+=1;
+                                imageAdapter.addItem(new ImageItem(newimg));
+                                gridView.setAdapter(imageAdapter);
+                            }
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                            Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
+                            intent.putExtra("id",MainActivity.id);
+                            intent.putExtra("ct",Integer.toString(i));
+                            intent.putExtra("image", BitMapToString((imageAdapter.getItem(i).getImage())));
+                            startActivity(intent);
+
+                        }
+                    });
+                }
+            });
+
+        }
+    }
+
+    static class HttpDelAsyncTask extends AsyncTask<String, Void, String> {
+
+        private MainActivity mainAct;
+        HttpDelAsyncTask(MainActivity mainActivity) {this.mainAct = mainActivity;}
+        @Override
+        protected String doInBackground(String... urls) {
+
+            return DEL(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            str = result;
+            mainAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //mainAct.tvResponse.setText(strJson);
+
+                }
+            });
+
+        }
+    }
+
+    static class HttpUpdateAsyncTask extends AsyncTask<String, Void, String> {
+
+        private MainActivity mainAct;
+        HttpUpdateAsyncTask(MainActivity mainActivity) {this.mainAct = mainActivity;}
+        @Override
+        protected String doInBackground(String... urls) {
+            Phonebook phonenum = new Phonebook();
+            phonenum.setName(urls[1]);
+            phonenum.setNumber(urls[2]);
+            phonenum.setFriendly(urls[3]);
+            return UPDATE(urls[0], phonenum);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            str = result;
+            mainAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
+
+        }
+    }
+
+    public static class HttpAsyncTask extends AsyncTask<String, Void, String> {
+
+        private   MainActivity mainAct;
+
+        HttpAsyncTask(MainActivity mainActivity) {
+            this.mainAct = mainActivity;
+        }
+        @Override
+        protected String doInBackground(String... urls) {
+
+            Phonebook phonenum = new Phonebook();
+            phonenum.setName(urls[1]);
+            phonenum.setNumber(urls[2]);
+            phonenum.setFriendly(urls[3]);
+
+            return POST(urls[0],phonenum);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            str = result;
+            mainAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
+
+        }
+    }
 
 
     @Override
@@ -559,6 +958,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(getApplicationContext(), ImageGet.class);
             Uri selectedImageUri = data.getData();
             String imagePath = selectedImageUri.getPath();
+            ct = MainActivity.imageAdapter.getCount();
             //String imagePath = getRealPathFromURI(selectedImageUri);
             /*String[] filePathColumn = { MediaStore.Images.Media.DATA };
             Cursor cursor = getContentResolver().query(selectedImageUri, filePathColumn, null, null, null);
@@ -568,7 +968,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             cursor.close();
             Bitmap bm = BitmapFactory.decodeFile(picturePath);
             */
-
+            intent.putExtra("id",MainActivity.id);
+            intent.putExtra("ct",Integer.toString(ct));
             intent.putExtra("image", selectedImageUri.toString());
             startActivity(intent);
 
@@ -629,24 +1030,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void jsonParsing(String json){
         list.clear();
         try{
-            JSONObject jobj=new JSONObject(json);
-            JSONArray jarray=jobj.getJSONArray("Phonebook");
+//            JSONObject jobj=new JSONObject(json);
+//            JSONArray jarray=jobj.getJSONArray("Phonebook");
+            JSONArray jarray = new JSONArray(json);
+            for(int i=0; i<jarray.length(); i++) {
+                JSONObject pobj = jarray.getJSONObject(i);
 
-            for(int i=0; i<jarray.length(); i++){
-                JSONObject pobj=jarray.getJSONObject(i);
+                if (Integer.parseInt(pobj.getString("friendy")) != -1) {
+                    Phonebook pb = new Phonebook();
+                    pb.setName(pobj.getString("name"));
+                    pb.setNumber(pobj.getString("num"));
+                    pb.setFriendly(pobj.getString("friendy"));
 
-                Phonebook pb=new Phonebook();
-                pb.setName(pobj.getString("name"));
-                pb.setNumber(pobj.getString("number"));
-                pb.setFriendly(pobj.getInt("friendly"));
+                    total += Integer.parseInt(pobj.getString("friendy"));
+                    list.add(pb);
 
-                total+=pobj.getInt("friendly");
+                    tmp2.add(pb.getNumber());
+                }
 
-                list.add(pb);
-                tmp2.add(pb.getNumber());
+
+
             }
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+    public String BitMapToString(Bitmap bitmap){
+
+        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
+        byte [] b=baos.toByteArray();
+        String temp= Base64.encodeToString(b, Base64.DEFAULT);
+
+        return temp;
+
+    }
+
+    public Bitmap StringToBitMap(String encodedString){
+        try {
+            byte [] encodeByte=Base64.decode(encodedString,Base64.DEFAULT);
+            Bitmap bitmap= BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+            return bitmap;
+        } catch(Exception e) {
+            e.getMessage();
+            return null;
         }
     }
 
@@ -682,6 +1109,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         adapter.notifyDataSetChanged();
     }
 
+    private static String convertInputStreamToString(InputStream inputStream) throws IOException{
+        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+        String line = "";
+        String result = "";
+        while((line = bufferedReader.readLine()) != null)
+            result += line;
+
+        inputStream.close();
+        return result;
+
+    }
 
     @Override
     public void onClick(View view) {

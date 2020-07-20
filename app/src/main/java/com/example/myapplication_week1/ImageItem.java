@@ -1,17 +1,19 @@
 package com.example.myapplication_week1;
 
-public class ImageItem {
-    private int image;
+import android.graphics.Bitmap;
 
-    public ImageItem(int image) {
+public class ImageItem {
+    private Bitmap image;
+
+    public ImageItem(Bitmap image) {
         this.image = image;
     }
 
-    public int getImage() {
+    public Bitmap getImage() {
         return image;
     }
 
-    public void setImage(int image){
+    public void setImage(Bitmap image){
         this.image=image;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.myapplication_week1;
 
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -27,6 +28,7 @@ public class ImageViewer extends LinearLayout {
     }
 
     public void setImage(ImageItem imageItem){
-        image.setImageResource(imageItem.getImage());
+        image.setImageBitmap(Bitmap.createScaledBitmap(imageItem.getImage(),300,300,true));
+        //image.setScaleType(ImageView.ScaleType.CENTER_CROP);
     }
 }
