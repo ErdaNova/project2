@@ -88,8 +88,8 @@
             android:id="@+id/check"
             android:gravity="center"
             android:text="확인"
-            android:textColor="@color/white"
-            android:background="@color/bright_red"
+            android:textColor="@color/black"
+            android:background="@drawable/buttonshape"
             android:textSize="20dp"
             tools:ignore="Suspicious0dp" />
 
