@@ -132,14 +132,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int count=0;
     Button marker_control;
     private int location_status=-2;
-    private String name="Noname"+id.toString().substring(0,3);
+    private String name="";
 
     private String host = "http://192.249.19.243:9780";
     static String str = "";
     static String[] location= new String[100];
     static String[] username= new String[100];
 
-    public CountDownTimer CDT = new CountDownTimer(5 * 15000, 15000) {
+    public CountDownTimer CDT = new CountDownTimer(500 * 10000, 10000) {
         public void onTick(long millisUntilFinished) {
             GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
             double lat=gpsTracker.getLatitude();
@@ -465,9 +465,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                       public void onClick(View view) {
                                           EditText editname = (EditText) findViewById(R.id.naming);
                                           name = editname.getText().toString();
-                                          if(name == ""){
-                                              name="Noname"+id.toString().substring(0,3);
+                                          if(name.length() == 0){
+                                              name="Noname"+id.substring(0,3);
                                           }
+
                                       }
 
                                   });
@@ -479,6 +480,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View view) {
                 count=count+1;
                 if (count%2==1) {
+                    if(name.length() == 0){
+                        name="Noname"+id.substring(0,3);
+                    }
                     location_status=-3;
                     CDT.start();
                     okaybt.setEnabled(false);
@@ -1174,7 +1178,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             mOptions.position(new LatLng(lat,longi));
 
-            googleMap.addMarker(mOptions);
+
 
         } catch (IOException e) {
 
