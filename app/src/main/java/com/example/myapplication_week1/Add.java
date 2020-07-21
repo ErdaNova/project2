@@ -82,7 +82,7 @@ public class Add extends Activity implements View.OnClickListener {
                         edit.commit();*/
                         MainActivity mainAct = new MainActivity();
                         MainActivity.HttpAsyncTask httpTask = new MainActivity.HttpAsyncTask(mainAct);
-                        httpTask.execute("http://192.249.19.243:9780/api/gallery", uname, unum, "0");
+                        httpTask.execute("http://192.249.19.243:9780/api/phonebooks", uname, unum, "0");
 
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                         intent.putExtra("id",id);

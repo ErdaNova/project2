@@ -19,7 +19,7 @@
             android:id="@android:id/tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/pink">
+            android:background="@color/white">
         </TabWidget>
 
         <FrameLayout
@@ -115,9 +115,9 @@
                         android:id="@+id/button"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/getimage"
+                        android:background="@drawable/buttonshape"
                         android:text="Get Image"
-                        android:textColor="@color/white"
+                        android:textColor="@color/black"
                         android:textSize="15dp" />
 
                     <GridView
@@ -131,6 +131,65 @@
 
                 </LinearLayout>
             </ScrollView>
+            <LinearLayout
+                android:id="@+id/tab_content3"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/layout">
+
+
+                    <fragment
+                        android:id="@+id/map"
+                        class="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+
+                    <Button
+                        android:id="@+id/button2"
+
+                        android:layout_width="70dp"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/buttonshape"
+                        android:textSize="15dp"
+                        android:textColor="@color/black"
+                        android:text="위치공유" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_gravity="bottom">
+
+
+                        <Button
+                            android:id="@+id/okaybt"
+                            android:layout_width="74dp"
+                            android:layout_height="wrap_content"
+                            android:text="확인"
+                            android:background="@drawable/buttonshape"
+                            android:textSize="15dp"
+                            android:textColor="@color/black"
+                            tools:layout_editor_absoluteX="300dp"
+                            tools:layout_editor_absoluteY="667dp" />
+
+                        <EditText
+                            android:id="@+id/naming"
+                            android:layout_width="243dp"
+
+                            android:layout_height="wrap_content"
+                            android:hint="이름" />
+                    </LinearLayout>
+
+                </FrameLayout>
+
+            </LinearLayout>
+
 
             <LinearLayout
                 android:id="@+id/tab_content1"
@@ -166,64 +225,13 @@
                         android:layout_weight="1"
                         android:background="@drawable/buttonshape"
                         android:textSize="15dp"
-                        android:textColor="@color/bright_red"
+                        android:textColor="@color/black"
                         android:text="ADD" />
 
                 </LinearLayout>
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/tab_content3"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:id="@+id/layout">
-
-
-                    <fragment
-                        android:id="@+id/map"
-                        class="com.google.android.gms.maps.SupportMapFragment"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-
-
-                    <Button
-                        android:id="@+id/button2"
-
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:text="위치공유" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_gravity="bottom">
-
-
-                        <Button
-                            android:id="@+id/okaybt"
-                            android:layout_width="74dp"
-                            android:layout_height="wrap_content"
-                            android:text="확인"
-                            tools:layout_editor_absoluteX="300dp"
-                            tools:layout_editor_absoluteY="667dp" />
-
-                        <EditText
-                            android:id="@+id/naming"
-                            android:layout_width="243dp"
-
-                            android:layout_height="wrap_content"
-                            android:hint="이름" />
-                    </LinearLayout>
-
-                </FrameLayout>
-
-            </LinearLayout>
 
 
 

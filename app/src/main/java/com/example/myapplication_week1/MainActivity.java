@@ -103,10 +103,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     static ImageAdapter imageAdapter;
     private final int GET_GALLERY_IMAGE=200;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    Button button;
 
 
-    Button button, tab3_btn, tab3_1, tab3_2, tab3_3, tab3_4, tab3_5, name_btn ;
-    Button tab3_1_dst, tab3_2_dst, tab3_3_dst, tab3_4_dst, tab3_5_dst;
     Button result_btn;
     LinearLayout ladder, names, dsts;
     //ImageView image;
@@ -362,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 adapter.notifyDataSetChanged();
                             }
                         });
-                        del.setPositiveButton("아니오 뚱인데요", new DialogInterface.OnClickListener() {
+                        del.setPositiveButton("아니오", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
 
@@ -447,7 +446,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         spec = host.newTabSpec("tab3");
-        spec.setIndicator("LADDER");
+        spec.setIndicator("OBSERVER");
         spec.setContent(R.id.tab_content3);
         host.addTab(spec);
 
@@ -1114,6 +1113,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         // 리스트 데이터가 변경되었으므로 아답터를 갱신하여 검색된 데이터를 화면에 보여준다.
         adapter.notifyDataSetChanged();
+
     }
 
     private static String convertInputStreamToString(InputStream inputStream) throws IOException{

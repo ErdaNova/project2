@@ -8,6 +8,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TabHost;
@@ -49,10 +51,9 @@ public class Login extends AppCompatActivity {
         }
 
         setContentView(R.layout.login);
-
+        final ImageView login = (ImageView)findViewById(R.id.loginImg);
 
         callbackManager = CallbackManager.Factory.create();
-
         LoginButton loginButton = (LoginButton) findViewById(R.id.btn_facebook_login);
         loginButton.setReadPermissions(Arrays.asList("public_profile", "email"));
         FacebookSdk.addLoggingBehavior(LoggingBehavior.REQUESTS);
@@ -63,6 +64,7 @@ public class Login extends AppCompatActivity {
                 id=profile.getId();
                 Intent intent=new Intent(Login.this,MainActivity.class);
                 intent.putExtra("id",id);
+                login.setImageResource(R.drawable.logout);
                 startActivity(intent);
 
             }

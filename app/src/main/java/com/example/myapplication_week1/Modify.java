@@ -89,7 +89,7 @@ public class Modify extends Activity implements View.OnClickListener{
                         finishAffinity();
                     }
                 });
-                ch.setPositiveButton("아니오 뚱인데요", new DialogInterface.OnClickListener() {
+                ch.setPositiveButton("아니오", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
 
