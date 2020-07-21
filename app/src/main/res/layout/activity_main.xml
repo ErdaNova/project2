@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -26,9 +27,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+
             <ScrollView
-                xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
 
                 android:id="@+id/tab_content2"
                 android:layout_width="match_parent"
@@ -38,14 +38,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
-                    <Button
-                        android:id="@+id/button"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/getimage"
-                        android:textColor="@color/white"
-                        android:textSize="15dp"
-                        android:text="Get Image"/>
+
                     <!--
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -118,6 +111,15 @@
                         android:layout_gravity="center"/>
                     -->
 
+                    <Button
+                        android:id="@+id/button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/getimage"
+                        android:text="Get Image"
+                        android:textColor="@color/white"
+                        android:textSize="15dp" />
+
                     <GridView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -170,37 +172,58 @@
                 </LinearLayout>
             </LinearLayout>
 
-
-            <HorizontalScrollView
+            <LinearLayout
+                android:id="@+id/tab_content3"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:id="@+id/tab_content3">
+                android:orientation="vertical">
+
                 <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent">
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/layout">
+
+
+                    <fragment
+                        android:id="@+id/map"
+                        class="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+
+                    <Button
+                        android:id="@+id/button2"
+
+                        android:layout_width="77dp"
+                        android:layout_height="wrap_content"
+                        android:text="위치공유" />
 
                     <LinearLayout
-                        android:id="@+id/manual"
-                        android:layout_width="344dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="15dp"
-                        android:layout_marginTop="170dp"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:layout_gravity="bottom">
 
-                        <TextView
-                            android:id="@+id/id"
-                            android:layout_width="wrap_content"
+
+                        <Button
+                            android:id="@+id/okaybt"
+                            android:layout_width="74dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginLeft="95dp"
-                            android:text="와"
-                            android:textColor="#000000"
-                            android:textSize="20dp"
-                            android:textStyle="bold" />
+                            android:text="확인"
+                            tools:layout_editor_absoluteX="300dp"
+                            tools:layout_editor_absoluteY="667dp" />
 
+                        <EditText
+                            android:id="@+id/naming"
+                            android:layout_width="243dp"
+
+                            android:layout_height="wrap_content"
+                            android:hint="이름" />
                     </LinearLayout>
 
                 </FrameLayout>
-            </HorizontalScrollView>
+
+            </LinearLayout>
 
 
 

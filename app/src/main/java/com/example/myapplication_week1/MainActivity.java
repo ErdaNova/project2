@@ -1,44 +1,39 @@
 package com.example.myapplication_week1;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
-import android.annotation.SuppressLint;
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-//import android.database.Cursor;
-//import android.graphics.Bitmap;
-//import android.graphics.BitmapFactory;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 //import android.provider.ContactsContract;
-import android.os.Vibrator;
+
+import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
+
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.Button;
@@ -51,24 +46,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.MessageDigest;
-import java.util.*;
+
 //import java.util.List;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.view.View;
-import android.widget.Adapter;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TabWidget;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,18 +58,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import android.content.Context;
-import android.graphics.Canvas;
+
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.os.CountDownTimer;
-import android.os.Message;
 import android.os.Handler;
-import android.os.Bundle;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
+
 
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
@@ -99,16 +74,35 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
-import java.util.logging.LogRecord;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+
+import com.google.android.gms.maps.GoogleMap.OnMyLocationClickListener;
+import com.google.android.gms.maps.OnMapReadyCallback;
+
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
+import com.google.android.gms.maps.model.MarkerOptions;
+
+
+import java.util.List;
+import android.widget.Button;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.UiSettings;
 
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,OnMyLocationClickListener,
+        OnMapReadyCallback,
+        ActivityCompat.OnRequestPermissionsResultCallback {
 
     //ImageView image1, image2,image3,image4, image5, image6, image7, image8, image9, image10, image11, image12, image13, image14, image15, image16, image17, image18, image19, image20, image21;
     static GridView gridView;
     static ImageAdapter imageAdapter;
     private final int GET_GALLERY_IMAGE=200;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
 
     Button button, tab3_btn, tab3_1, tab3_2, tab3_3, tab3_4, tab3_5, name_btn ;
@@ -130,8 +124,85 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     final int[][] path=new int[7][5];
     private static String id;
 
+    private GoogleMap map;
+    private MapView mapView = null;
+    private UiSettings uiSettings;
+    private static final String SELECTED_STYLE = "selected_style";
+    Button style;
+    private int count=0;
+    Button marker_control;
+    private int location_status=-2;
+    private String name="Noname"+id.toString().substring(0,3);
+
     private String host = "http://192.249.19.243:9780";
     static String str = "";
+    static String[] location= new String[100];
+    static String[] username= new String[100];
+
+    public CountDownTimer CDT = new CountDownTimer(5 * 15000, 15000) {
+        public void onTick(long millisUntilFinished) {
+            GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
+            double lat=gpsTracker.getLatitude();
+            double longi=gpsTracker.getLongitude();
+            final Geocoder g = new Geocoder(MainActivity.this);
+            int length=0;
+
+            //JSONObject my_location= new JSONObject();
+
+            HttpUpdateAsyncTask httplocAsyncTask = new HttpUpdateAsyncTask(MainActivity.this);
+            httplocAsyncTask.execute("http://192.249.19.243:9780/api/phonebooks/name/"+name ,name, Double.toString(lat) +","+ Double.toString(longi),Integer.toString(location_status));
+
+
+
+            List<Address> addresses = null;
+            map.clear();
+
+            HttpGetAsyncTask3 getloc = new HttpGetAsyncTask3(MainActivity.this);
+            getloc.execute("http://192.249.19.243:9780/api/phonebooks");
+
+            for (int i=0; i<username.length; i++) {
+                if (username[i] == null) {
+                    length = i;
+                    break;
+                }
+            }
+
+
+            for (int x = 0; x<length; x++) {
+
+                String[] eachloc = location[x].split(",");
+                String latitude = eachloc[0];
+                String longitude = eachloc[1];
+
+
+                try {
+                    List<Address> resultList = g.getFromLocation(Double.parseDouble(latitude), Double.parseDouble(longitude), 10);
+                    MarkerOptions mOptions = new MarkerOptions();
+                    mOptions.title(username[x]);
+                    mOptions.snippet(resultList.get(0).getAddressLine(0));
+                    mOptions.position(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude)));
+                    map.addMarker(mOptions);
+                } catch (IOException e) {
+
+                }
+            }
+
+
+
+
+
+
+
+
+        }
+        public void onFinish() {
+            map.clear();
+            CDT.start();
+
+        }
+    };
+
+
 
 
     @Override
@@ -141,8 +212,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         id = intent.getExtras().getString("id");
         System.out.println(id);
         setContentView(R.layout.activity_main);
-        TextView t = (TextView)findViewById(R.id.id);
-        t.setText(id);
+
+
+
 
         final TabHost host=(TabHost)findViewById(R.id.host);
         host.setup();
@@ -156,31 +228,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         HttpGetAsyncTask httpTask = new HttpGetAsyncTask(MainActivity.this);
         httpTask.execute("http://192.249.19.243:9780/api/phonebooks/idnum/"+id);
 
-//        if(str!=null) jsonParsing(str);
-//        Collections.sort(list);
-
-        //LISTVIEW
-//        final ListView listview = (ListView)findViewById(R.id.pb_listview);
-//
-//        adapter = new PbAdapter(this,R.layout.pb_item, list);
-//        adapter.notifyDataSetChanged();
-//        listView.setAdapter(adapter);
-
-//        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView adapterView, View view, int position, long id) {
-//                Intent intent=new Intent(getApplicationContext(), Next.class);
-//
-//                intent.putExtra("name", list.get(position).getName());
-//                intent.putExtra("number", list.get(position).getNumber());
-//                list.get(position).setFriendly(list.get(position).getFriendly()+1);
-//                intent.putExtra("friendly", list.get(position).getFriendly());
-//                total++;
-//                intent.putExtra("total",total);
-//                intent.putExtra("index", position);
-//                startActivity(intent);
-//            }
-//        });
 
         //SWIPE
 
@@ -393,105 +440,63 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-//        imageAdapter.addItem(new ImageItem(R.drawable.image1));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image2));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image3));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image4));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image5));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image6));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image7));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image8));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image9));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image10));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image11));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image12));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image13));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image14));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image15));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image16));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image17));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image18));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image19));
-//        imageAdapter.addItem(new ImageItem(R.drawable.image20));
-    //        imageAdapter.addItem(new ImageItem(R.drawable.image21));
-    //        gridView.setAdapter(imageAdapter);
-//        gridView.setAdapter(imageAdapter);
+
         HttpGetAsyncTask2 httpTask2 = new HttpGetAsyncTask2(MainActivity.this);
         httpTask2.execute("http://192.249.19.243:9780/api/phonebooks/idnum/"+id);
 
-//        mostviewImg[0]=sp2.getInt("most",0);
-//        secondImg[0]=sp2.getInt("second",0);
-//        thirdImg[0]=sp2.getInt("third",0);
-//        if(mostviewImg[0]!=0) {
-//            int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
-//            mostViewd.setImageResource(k);
-//        }
-//        if(secondImg[0]!=0) {
-//            int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
-//            second.setImageResource(k);
-//        }
-//        if(thirdImg[0]!=0) {
-//            int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
-//            third.setImageResource(k);
-//        }
-//        final SharedPreferences.Editor editor = sp2.edit();
-//
-//
-//        Button reset = (Button)findViewById(R.id.reset);
-//        reset.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View view) {
-//                for(int a=0; a<21; a++){
-//                    editor.putInt(Integer.toString(a),0);
-//                }
-//                mostviewImg[0] = 0;
-//                secondImg[0] = 0;
-//                thirdImg[0] = 0;
-//                editor.putInt("most",mostviewImg[0]);
-//                editor.putInt("second",secondImg[0]);
-//                editor.putInt("third",thirdImg[0]);
-//                editor.commit();
-//                mostViewd.setImageResource(0);
-//                second.setImageResource(0);
-//                third.setImageResource(0);
-//                Intent intent = new Intent(getApplicationContext(),MainActivity.class);
-//                startActivity(intent);
-//                finish();
-//            }
-//        });
-//        mostViewd.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View view){
-//                int k = getResources().getIdentifier("image" + mostviewImg[0], "drawable", getPackageName());
-//                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-//                intent.putExtra("image",Integer.toString(k));
-//                startActivity(intent);
-//            }
-//        });
-//        second.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View view){
-//                int k = getResources().getIdentifier("image" + secondImg[0], "drawable", getPackageName());
-//                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-//                intent.putExtra("image",Integer.toString(k));
-//                startActivity(intent);
-//            }
-//        });
-//
-//        third.setOnClickListener(new View.OnClickListener(){
-//            @Override
-//            public void onClick(View view){
-//                int k = getResources().getIdentifier("image" + thirdImg[0], "drawable", getPackageName());
-//                Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
-//                intent.putExtra("image",Integer.toString(k));
-//                startActivity(intent);
-//            }
-//        });
+
 
         spec = host.newTabSpec("tab3");
         spec.setIndicator("LADDER");
         spec.setContent(R.id.tab_content3);
         host.addTab(spec);
+
+        GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
+        double lat=gpsTracker.getLatitude();
+        double longi=gpsTracker.getLongitude();
+        final Button okaybt=(Button) findViewById(R.id.okaybt);
+        style=(Button) findViewById(R.id.button2);
+
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        okaybt.setOnClickListener(new View.OnClickListener() {
+
+                                      public void onClick(View view) {
+                                          EditText editname = (EditText) findViewById(R.id.naming);
+                                          name = editname.getText().toString();
+                                          if(name == ""){
+                                              name="Noname"+id.toString().substring(0,3);
+                                          }
+                                      }
+
+                                  });
+
+
+
+        style.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                count=count+1;
+                if (count%2==1) {
+                    location_status=-3;
+                    CDT.start();
+                    okaybt.setEnabled(false);
+
+                }
+                else{
+                    location_status=-2;
+
+                    CDT.cancel();
+//                    HttpUpdateAsyncTask httplocAsyncTask = new HttpUpdateAsyncTask(MainActivity.this);
+//                    httplocAsyncTask.execute("http://192.249.19.243:9780/api/phonebooks/name/"+name ,name, "",Integer.toString(location_status));
+                    HttpDelAsyncTask httpdel = new HttpDelAsyncTask(MainActivity.this);
+                    httpdel.execute("http://192.249.19.243:9780/api/phonebooks/name/"+name);
+                    okaybt.setEnabled(true);
+                    map.clear();
+                }
+            }
+        });
 
 
 
@@ -506,18 +511,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             String json = "";
 
-            // build jsonObject
-//            JSONObject jsonObject = new JSONObject();
-//            jsonObject.accumulate("name", phonenum.getName());
-//            jsonObject.accumulate("num", phonenum.getNum());
-//            jsonObject.accumulate("mail", phonenum.getMail());
-
-            // convert JSONObject to JSON to String
-//            json = jsonObject.toString();
-
-            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
-            // ObjectMapper mapper = new ObjectMapper();
-            // json = mapper.writeValueAsString(person);
 
             // Set some headers to inform server about the type of the content
             httpCon.setRequestProperty("Accept", "application/json");
@@ -563,18 +556,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             String json = "";
 
-            // build jsonObject
-//            JSONObject jsonObject = new JSONObject();
-//            jsonObject.accumulate("name", phonenum.getName());
-//            jsonObject.accumulate("num", phonenum.getNum());
-//            jsonObject.accumulate("mail", phonenum.getMail());
 
-            // convert JSONObject to JSON to String
-//            json = jsonObject.toString();
-
-            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
-            // ObjectMapper mapper = new ObjectMapper();
-            // json = mapper.writeValueAsString(person);
 
             // Set some headers to inform server about the type of the content
             httpCon.setRequestProperty("Accept", "application/json");
@@ -632,9 +614,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // convert JSONObject to JSON to String
             json = jsonObject.toString();
 
-            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
-            // ObjectMapper mapper = new ObjectMapper();
-            // json = mapper.writeValueAsString(person);
 
             // Set some headers to inform server about the type of the content
             httpCon.setRequestProperty("Accept", "application/json");
@@ -697,9 +676,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             json = jsonObject.toString();
             System.out.println(json);
 
-            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
-            // ObjectMapper mapper = new ObjectMapper();
-            // json = mapper.writeValueAsString(person);
+
 
             // Set some headers to inform server about the type of the content
             httpCon.setRequestProperty("Accept", "application/json");
@@ -865,6 +842,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    class HttpGetAsyncTask3 extends AsyncTask<String, Void, String> {
+
+        private MainActivity mainAct;
+        HttpGetAsyncTask3(MainActivity mainActivity) {this.mainAct = mainActivity;}
+        @Override
+        protected String doInBackground(String... urls) {
+
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            location= new String[100];
+            username= new String[100];
+            str = result;
+            mainAct.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //mainAct.tvResponse.setText(strJson);
+                    try{
+//            JSONObject jobj=new JSONObject(json);
+//            JSONArray jarray=jobj.getJSONArray("Phonebook");
+                        JSONArray jarray = new JSONArray(str);
+
+                        int personnum=0;
+                        for(int i=0; i<jarray.length(); i++) {
+                            JSONObject pobj = jarray.getJSONObject(i);
+                            if(Integer.parseInt(pobj.getString("friendy"))==-3) {
+                                MainActivity.username[personnum] = pobj.getString("name");
+                                MainActivity.location[personnum] = pobj.getString("num");
+                                personnum+=1;
+                            }
+
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                            Intent intent = new Intent(getApplicationContext(), ImageClicked.class);
+                            intent.putExtra("id",MainActivity.id);
+                            intent.putExtra("ct",Integer.toString(i));
+                            intent.putExtra("image", BitMapToString((imageAdapter.getItem(i).getImage())));
+                            startActivity(intent);
+
+                        }
+                    });
+                }
+            });
+
+        }
+    }
+
     static class HttpDelAsyncTask extends AsyncTask<String, Void, String> {
 
         private MainActivity mainAct;
@@ -959,15 +991,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Uri selectedImageUri = data.getData();
             String imagePath = selectedImageUri.getPath();
             ct = MainActivity.imageAdapter.getCount();
-            //String imagePath = getRealPathFromURI(selectedImageUri);
-            /*String[] filePathColumn = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getContentResolver().query(selectedImageUri, filePathColumn, null, null, null);
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            String picturePath = cursor.getString(columnIndex);
-            cursor.close();
-            Bitmap bm = BitmapFactory.decodeFile(picturePath);
-            */
+
             intent.putExtra("id",MainActivity.id);
             intent.putExtra("ct",Integer.toString(ct));
             intent.putExtra("image", selectedImageUri.toString());
@@ -977,27 +1001,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    /*
-    public String getBase64String(Bitmap bitmap){
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-        byte[] imageBytes = byteArrayOutputStream.toByteArray();
-        return Base64.encodeToString(imageBytes, Base64.NO_WRAP);
-    }
 
-     */
-
-/*
-    private String getRealPathFromURI(Uri contentUri) {
-        int column_index=0;
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-        if(cursor.moveToFirst()){
-            column_index=cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        }
-        return cursor.getString(column_index);
-    }
- */
 
     class ImageAdapter extends BaseAdapter{
         ArrayList<ImageItem> items = new ArrayList<ImageItem>();
@@ -1030,13 +1034,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void jsonParsing(String json){
         list.clear();
         try{
-//            JSONObject jobj=new JSONObject(json);
-//            JSONArray jarray=jobj.getJSONArray("Phonebook");
+
             JSONArray jarray = new JSONArray(json);
             for(int i=0; i<jarray.length(); i++) {
                 JSONObject pobj = jarray.getJSONObject(i);
 
-                if (Integer.parseInt(pobj.getString("friendy")) != -1) {
+                if (Integer.parseInt(pobj.getString("friendy")) >=0) {
                     Phonebook pb = new Phonebook();
                     pb.setName(pobj.getString("name"));
                     pb.setNumber(pobj.getString("num"));
@@ -1128,6 +1131,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public int dpToPx(int sizeInDP){
         int pxVal = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, sizeInDP, getResources().getDisplayMetrics());
         return pxVal;
+    }
+
+    private void enableMyLocation() {
+        // [START maps_check_location_permission]
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            if (map != null) {
+                map.setMyLocationEnabled(true);
+            }
+        } else {
+            // Permission to access the location is missing. Show rationale and request permission
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+        }
+        // [END maps_check_location_permission]
+    }
+
+
+
+
+
+
+    @Override
+    public void onMapReady(final GoogleMap googleMap) {
+        map = googleMap;
+        GpsTracker gpsTracker = new GpsTracker(MainActivity.this);
+        double lat=gpsTracker.getLatitude();
+        double longi=gpsTracker.getLongitude();
+        final Geocoder g = new Geocoder(this);
+
+        Handler mHandler = new Handler();
+
+        List<Address> addresses = null;
+        try{
+            googleMap.clear();
+            List<Address> resultList = g.getFromLocation(lat,longi,10);
+            MarkerOptions mOptions = new MarkerOptions();
+
+            mOptions.title("위치");
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lat, longi)));
+
+            mOptions.position(new LatLng(lat,longi));
+
+            googleMap.addMarker(mOptions);
+
+        } catch (IOException e) {
+
+        }
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(14));
+        uiSettings = map.getUiSettings();
+        map.setOnMyLocationClickListener(this);
+        enableMyLocation();
+        uiSettings.setZoomControlsEnabled(true);
+        uiSettings.setCompassEnabled(true);
+
+
+
+
+    }
+
+    @Override
+    public void onMyLocationClick(@NonNull Location location) {
+
+
+
     }
 
 
