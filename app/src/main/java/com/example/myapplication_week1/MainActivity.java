@@ -744,7 +744,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         public void create(SwipeMenu menu) {
 
                             SwipeMenuItem item=new SwipeMenuItem(getApplicationContext());
-                            item.setBackground(new ColorDrawable(Color.rgb(0xFF,0x71,0x71)));
+                            item.setBackground(new ColorDrawable(Color.BLACK));
                             item.setWidth(200);
                             // set item title
                             item.setTitle("MODIFY");
@@ -759,8 +759,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             SwipeMenuItem deleteItem = new SwipeMenuItem(
                                     getApplicationContext());
                             // set item background
-                            deleteItem.setBackground(new ColorDrawable(Color.rgb(0xFF,
-                                    0xFF, 0xFF)));
+                            deleteItem.setBackground(new ColorDrawable(Color.WHITE));
                             // set item width
                             deleteItem.setWidth(200);
                             // set item title
@@ -768,7 +767,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             // set item title fontsize
                             deleteItem.setTitleSize(15);
                             // set item title font color
-                            deleteItem.setTitleColor(Color.rgb(0xFF,0x71,0x71));
+                            deleteItem.setTitleColor(Color.BLACK);
                             // add to menu
                             menu.addMenuItem(deleteItem);
                         }
